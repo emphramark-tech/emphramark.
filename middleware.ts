@@ -1,8 +1,8 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
   try {
+    const { createServerClient } = await import('@supabase/ssr')
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
@@ -51,17 +51,11 @@ export async function middleware(request: NextRequest) {
       },
     )
 
-    let user = null
-    try {
-      const { data, error } = await supabase.auth.getUser()
-      if (error) {
-        console.error('Supabase getUser error in middleware', error)
-      }
-      user = data.user
-    } catch (error) {
-      console.error('Supabase getUser threw in middleware', error)
-      return supabaseResponse
-    }
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    const user = session?.user ?? null
 
     if (
       request.nextUrl.pathname.startsWith('/dashboard') &&
